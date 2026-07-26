@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -17,6 +17,16 @@ export default function Profile() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(profile?.profile_image || null);
+
+  // Sync the preview with the saved profile image once the profile loads
+  // (or changes). Without this, a saved image wouldn't show if the profile
+  // resolved after the component first mounted. We only sync when there's no
+  // locally-chosen file being previewed.
+  useEffect(() => {
+    if (!imageFile && profile?.profile_image) {
+      setPreviewUrl(profile.profile_image);
+    }
+  }, [profile?.profile_image, imageFile]);
 
   // Password change
   const [newPassword, setNewPassword] = useState('');
@@ -39,10 +49,30 @@ export default function Profile() {
       const { error } = await supabase.storage
         .from('profile-images')
         .upload(fileName, imageFile, { upsert: true });
-      if (error) throw error;
+      if (error) {
+        // Give a clearer message when the storage bucket hasn't been created yet
+        const msg = (error.message || '').toLowerCase();
+        if (msg.includes('bucket not found') || msg.includes('bucket')) {
+          throw new Error(
+            'Profile image storage is not set up yet. An administrator needs to create a public "profile-images" bucket in Supabase Storage.'
+          );
+        }
+        throw error;
+      }
       const { data: urlData } = supabase.storage.from('profile-images').getPublicUrl(fileName);
       const imageUrl = urlData.publicUrl;
-      await updateProfile({ profile_image: imageUrl });
+      const { error: saveError } = await updateProfile({ profile_image: imageUrl });
+      if (saveError) {
+        // The file uploaded, but saving the URL to the profile failed.
+        // Most common cause: the profiles table has no profile_image column.
+        const sMsg = (saveError.message || '').toLowerCase();
+        if (sMsg.includes('column') || sMsg.includes('profile_image')) {
+          throw new Error(
+            'Image uploaded, but it could not be linked to your profile. The profiles table is missing a "profile_image" column.'
+          );
+        }
+        throw new Error(saveError.message || 'Could not save the profile image.');
+      }
       setPreviewUrl(imageUrl);
       toast.success('Profile image updated');
     } catch (err: any) {
