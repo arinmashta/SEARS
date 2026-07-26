@@ -90,15 +90,22 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
+              <button
+                type="button"
+                onClick={() =>
+                  navigate(profile?.role === 'universal_owner' ? '/labs' : '/dashboard')
+                }
+                className="flex items-center space-x-2 cursor-pointer bg-transparent border-0 p-0"
+                aria-label="Go to dashboard"
+              >
                 <img
                   src="/searsv2-logo.svg"
-                  alt="SEARSv2 Logo"
+                  alt="SEARS Logo"
                   className="w-10 h-10 mr-2"
                   style={{ display: 'inline-block', verticalAlign: 'middle' }}
                 />
                 <span className="text-xl font-bold text-scientific-navy align-middle">SEARS</span>
-              </div>
+              </button>
             </div>
             
             <div className="flex items-center space-x-4">
