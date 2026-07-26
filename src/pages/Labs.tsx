@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select';
 import {
   Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle,
-  DialogDescription, DialogFooter, DialogClose,
+  DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/useAuth';
 import { Plus, Building, Users, Settings, UserPlus } from 'lucide-react';
@@ -393,13 +393,12 @@ const Labs = () => {
                   <th className="py-2 px-4 border-b text-left">Lab Status</th>
                   <th className="py-2 px-4 border-b text-left">Total Experiments</th>
                   <th className="py-2 px-4 border-b text-left">Total Scientists</th>
-                  <th className="py-2 px-4 border-b text-left">Bill</th>
                 </tr>
               </thead>
               <tbody>
                 {labDetails.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-4 px-4 text-center text-muted-foreground">
+                    <td colSpan={5} className="py-4 px-4 text-center text-muted-foreground">
                       No labs found. Click "Create New Lab" to add one.
                     </td>
                   </tr>
@@ -411,9 +410,6 @@ const Labs = () => {
                       <td className="py-2 px-4">{lab.status}</td>
                       <td className="py-2 px-4">{lab.experimentCount}</td>
                       <td className="py-2 px-4">{lab.scientistCount}</td>
-                      <td className="py-2 px-4">
-                        <BillDialogButton labName={lab.name} experimentCount={lab.experimentCount} />
-                      </td>
                     </tr>
                   ))
                 )}
@@ -427,44 +423,3 @@ const Labs = () => {
 };
 
 export default Labs;
-
-function BillDialogButton({ labName, experimentCount }: { labName: string; experimentCount: number }) {
-  const [open, setOpen] = useState(false);
-  const ratePerExperiment = 10;
-  const total = experimentCount * ratePerExperiment;
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">Bill</Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Billing Calculator</DialogTitle>
-          <DialogDescription>
-            Estimated billing for <strong>{labName}</strong>.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-2 py-2 text-sm">
-          <div className="flex justify-between">
-            <span>Experiments</span>
-            <span>{experimentCount}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Rate per experiment</span>
-            <span>${ratePerExperiment.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between font-bold border-t pt-2">
-            <span>Total</span>
-            <span>${total.toFixed(2)}</span>
-          </div>
-        </div>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="default">Close</Button>
-          </DialogClose>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
